@@ -13,12 +13,6 @@ class deck():
     def __init__(self, deck_count=1,total_hands=5):
         
         self.total_hands = total_hands
-        
-        #self.counter = {'A': [0, deck_count*4], '2':[0, deck_count*4], '3':[0, deck_count*4], 
-        #           '4':[0, deck_count*4], '5':[0, deck_count*4], '6':[0, deck_count*4], 
-        #           '7':[0, deck_count*4], '8':[0, deck_count*4], '9':[0, deck_count*4], 
-        #           '10':[0, deck_count*4], 'J':[0, deck_count*4], 'Q':[0, deck_count*4], 
-        #           'K':[0, deck_count*4]}
         self.deck = {i:4*deck_count for i in range(2,11)}
         self.deck['J'] = 4*deck_count
         self.deck['Q'] = 4*deck_count
@@ -34,20 +28,26 @@ class deck():
         
         self.hand_totals = [0]*total_hands
         self.hands = [[] for i in range(total_hands)]
-        self.split = [] #will hold both hand and bust chance
         #dealer will contain a single card, with bust %
         #will need to update this
-        self.dealer = {'card':'', 'bust%': 0, }
+        self.dealer = {'card':None, 'bust%': 0, }
+        #placeholder for splitting hands
+        self.split = [] #will hold both hand and bust chance
     
-    def deal_dealer(self, card):
+    def deal_dealer(self, card, debug = False):
         self.dealer['card'] = card
         self.dealer['bust%'] = self.calc_dealer_bust()
+        if debug:
+            print('hands')
+            print(self.hands)
+            print('bust chances')
+            print(self.bust_chance)
+            print('dealer info')
+            print(self.dealer)
     
-    def calc_dealer_bust(self, max_draws = 2,):
+    def calc_dealer_bust(self, max_draws = 3,):
         face = ['K', 'Q', 'J']
-                
-        #combinations_found = {}
-            
+        
         def bust(current_count, deck,drawn, ace_count, all_drawn,cache=False, debug = False):
             if ace_count>0 and current_count>21:
                 current_count-=10
@@ -73,14 +73,6 @@ class deck():
                 if deck[card]>0:
                     deck[card]-=1
                     
-                    #if cache:
-                    #    all_drawn.append(str(card))
-                    #    tmp = all_drawn.copy()
-                    #    tmp.sort()
-                    #    all_drawn_string = ''.join(tmp)
-                    #    if all_drawn_string in combinations_found:
-                    #        bust_count+=combinations_found[all_drawn_string][0]
-                    #        safe_count+=combinations_found[all_drawn_string][1]
                     if card=='A':
                         #do this
                         if current_count+11<=21:
@@ -99,28 +91,30 @@ class deck():
                         bust_count+=b[0]
                         safe_count+=b[1]
                     deck[card]+=1
-                    #if cache:
-                    #    combinations_found[all_drawn_string] = [bust_count, safe_count]
-                    #    all_drawn.pop()
                     
-            return bust_count, safe_count
+            return bust_count, safe_count, round(bust_count/safe_count, 5)
+        
+        if self.dealer['card'] in face:
+            current_count = 10
+        elif self.dealer['card']=='A':
+            current_count = 11
+        else:
+            current_count = self.dealer['card']
+        bust_draws = bust(current_count = current_count, 
+                          deck = self.deck, 
+                          drawn = 0, 
+                          ace_count = self.dealer['card']=='A', 
+                          all_drawn = [],
+                          debug=False)
             
-            bust_draws = bust(current_count = self.dealer['card'], 
-                              deck = self.deck, 
-                              drawn = 0, 
-                              ace_count = ace_count, 
-                              all_drawn = [],
-                              debug=False)
-            #print('dealer card', dealer_card, bust_draws)
-            #bustdraws = [number of bust draws, total possible draws]
-            return bust_draws
+        return bust_draws
     
         
     def update_total(self, card, hand_number):
         #update totals
-        #10's for J/Q/K
+        #   10's for J/Q/K
         #for A, first index is if A represents 1, second if A represents 11
-        #current_total = self.hand_totals[hand_number]
+        
         if card in ['J','Q','K']:
             self.hand_totals[hand_number]+=10
             
@@ -128,7 +122,7 @@ class deck():
             self.hand_totals[hand_number]+=1
             
         else:
-            self.hand_totals[hand_number]+=int(card)
+            self.hand_totals[hand_number]+=card
             
     def update_bust_rate(self):
         #update bust rate
@@ -148,10 +142,11 @@ class deck():
                     bust_card_count+=self.deck[face]
                 
                 rate = bust_card_count/self.remaining_cards
-            bust_rates.append(rate)
+            bust_rates.append(round(rate,5))
             
         self.bust_chance = bust_rates
         if self.dealer['card']:
+            print('updating dealer bust')
             self.dealer['bust%'] = self.calc_dealer_bust()
                   
         
@@ -170,9 +165,13 @@ class deck():
         #update bust rate for every hand
         self.update_bust_rate()
         if debug:
+            print('hands')
             print(self.hands)
+            print('bust chances')
             print(self.bust_chance)
-            print(self.deck)
+            print('dealer info')
+            print(self.dealer)
+            #print(self.deck)
         
     def reset(self):
         self.deck = {i:4*self.deck_count for i in range(2,11)}
@@ -186,11 +185,23 @@ class deck():
         
         self.hand_totals = [0]*self.total_hands
         self.hands = [[] for i in range(self.total_hands)]
+        self.dealer = {'card':None, 'bust%': 0, }
         
-d = deck(total_hands = 1)
+        
+d = deck(total_hands = 5)
 d.card_drawn(card = 5,hand_number = 0, debug=True)
+d.card_drawn(card = 5,hand_number = 1, debug=True)
+d.card_drawn(card = 6,hand_number = 2, debug=True)
+d.card_drawn(card = 7,hand_number = 3, debug=True)
+d.card_drawn(card = 8,hand_number = 4, debug=True)
+d.deal_dealer(card = 'K', debug = True)
 d.card_drawn(card = 5,hand_number = 0, debug=True)
-d.deal_dealer(card = 'K')
+d.card_drawn(card = 5,hand_number = 1, debug=True)
+d.card_drawn(card = 6,hand_number = 2, debug=True)
+d.card_drawn(card = 7,hand_number = 3, debug=True)
+d.card_drawn(card = 8,hand_number = 4, debug=True)
+#print(d.dealer)
+
 #d.card_drawn(card = 5,hand_number = 1, debug=True)
 #d.card_drawn(card = 5,hand_number = 1, debug=True)
 #d.card_drawn(card = 4,hand_number = 2, debug=True)
@@ -199,10 +210,10 @@ d.deal_dealer(card = 'K')
 #d.card_drawn(card = 4,hand_number = 3, debug=True)
 #d.card_drawn(card = 3,hand_number = 4, debug=True)
 #d.card_drawn(card = 3,hand_number = 4, debug=True)
-d.reset()
+#d.reset()
  
-d.card_drawn('K',0,debug=True)
-d.card_drawn(6,0,debug=True)
+#d.card_drawn('K',0,debug=True)
+#d.card_drawn(6,0,debug=True)
  
 #print(d.hands)
 #print(d.bust_chance)
