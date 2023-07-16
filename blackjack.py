@@ -34,8 +34,37 @@ class deck():
         #placeholder for splitting hands
         self.split = [] #will hold both hand and bust chance
     
+    def new_deck(self, deck_count, total_hands):
+        self.total_hands = total_hands
+        self.deck = {i:4*deck_count for i in range(2,11)}
+        self.deck['J'] = 4*deck_count
+        self.deck['Q'] = 4*deck_count
+        self.deck['K'] = 4*deck_count
+        self.deck['A'] = 4*deck_count
+        
+        self.max_deck = self.deck.copy()
+        
+        
+        self.deck_count = deck_count
+        self.remaining_cards = 52*deck_count
+        self.bust_chance = [0]*total_hands
+        
+        self.hand_totals = [0]*total_hands
+        self.hands = [[] for i in range(total_hands)]
+        #dealer will contain a single card, with bust %
+        #will need to update this
+        self.dealer = {'card':None, 'bust%': 0, }
+        #placeholder for splitting hands
+        self.split = [] #will hold both hand and bust chance
+        
     def deal_dealer(self, card, debug = False):
+        #if a dealer card has already been dealt, add it back to the deck
+        if self.dealer['card']:
+            self.deck[self.dealer['card']]+=1
+            
         self.dealer['card'] = card
+        self.deck[card]-=1
+        self.remaining_cards-=1
         self.dealer['bust%'] = self.calc_dealer_bust()
         if debug:
             print('hands')
@@ -188,6 +217,7 @@ class deck():
         self.dealer = {'card':None, 'bust%': 0, }
         
         
+"""
 d = deck(total_hands = 5)
 d.card_drawn(card = 5,hand_number = 0, debug=True)
 d.card_drawn(card = 5,hand_number = 1, debug=True)
@@ -200,20 +230,4 @@ d.card_drawn(card = 5,hand_number = 1, debug=True)
 d.card_drawn(card = 6,hand_number = 2, debug=True)
 d.card_drawn(card = 7,hand_number = 3, debug=True)
 d.card_drawn(card = 8,hand_number = 4, debug=True)
-#print(d.dealer)
-
-#d.card_drawn(card = 5,hand_number = 1, debug=True)
-#d.card_drawn(card = 5,hand_number = 1, debug=True)
-#d.card_drawn(card = 4,hand_number = 2, debug=True)
-#d.card_drawn(card = 4,hand_number = 2, debug=True)
-#d.card_drawn(card = 4,hand_number = 3, debug=True)
-#d.card_drawn(card = 4,hand_number = 3, debug=True)
-#d.card_drawn(card = 3,hand_number = 4, debug=True)
-#d.card_drawn(card = 3,hand_number = 4, debug=True)
-#d.reset()
- 
-#d.card_drawn('K',0,debug=True)
-#d.card_drawn(6,0,debug=True)
- 
-#print(d.hands)
-#print(d.bust_chance)
+"""
